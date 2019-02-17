@@ -13,6 +13,7 @@ import tensorflow.keras.utils as utils
 # create argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--epochs', type = int, default = 200, help = 'total number of epochs')
+parser.add_argument('-n', '--nb_res_blocks', type = int, default = 3, help = 'number of residual blocks for each feature map size')
 
 args = parser.parse_args()
 
@@ -84,7 +85,7 @@ sess = tf.Session()
 K.set_session(sess)
 
 # instantiate model
-model = resnet((32, 32, 3), 3)
+model = resnet((32, 32, 3), args.nb_res_blocks)
 model.summary()
 
 # compile model
