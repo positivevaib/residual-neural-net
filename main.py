@@ -33,7 +33,7 @@ y_train = utils.to_categorical(y_train, 10)
 y_test = utils.to_categorical(y_test, 10)
 
 # augment data
-datagen = preprocessing.image.ImageDataGenerator(rotation_range = 10, width_shift_range = 0.6, height_shift_range = 0.6, horizontal_flip = True)
+datagen = preprocessing.image.ImageDataGenerator(width_shift_range = 0.05, height_shift_range = 0.05, horizontal_flip = True)
 datagen.fit(x_train)
 
 # define model
