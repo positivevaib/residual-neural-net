@@ -7,6 +7,7 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 import tensorflow.keras.layers as layers
 import tensorflow.keras.models as models
+import tensorflow.keras.preprocessing as preprocessing
 import tensorflow.keras.regularizers as regularizers
 import tensorflow.keras.utils as utils
 
@@ -30,6 +31,10 @@ x_test = (x_test - x_test.mean()) / x_test.std()
 # convert labels to categorical matrices
 y_train = utils.to_categorical(y_train, 10)
 y_test = utils.to_categorical(y_test, 10)
+
+# augment data
+datagen = preprocessing.image.ImageDataGenerator(rotation_range = 10, width_shift_range = 0.6, height_shift_range = 0.6, horizontal_flip = True)
+datagen.fit(x_train)
 
 # define model
 def id_block(x, tot_filters, kernel_size):
@@ -56,11 +61,11 @@ def proj_block(x, tot_filters, kernel_size):
 def res_stack(x, n, tot_filters, kernel_size, proj = False):
     '''stack of residual blocks'''
     if not proj:
-        for _ in range(2*n):
+        for _ in range(n):
             x = id_block(x, tot_filters, kernel_size)
     else:
         x = proj_block(x, tot_filters, kernel_size)
-        for _ in range(2*n - 1):
+        for _ in range(n - 1):
             x = id_block(x, tot_filters, kernel_size)
     
     return x
@@ -92,7 +97,7 @@ model.summary()
 model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
 
 # train model
-model.fit(x = x_train, y = y_train, batch_size = 128, epochs = args.epochs, validation_data = (x_test, y_test))
+model.fit_generator(datagen.flow(x_train, y_train, batch_size = 128), epochs = args.epochs, validation_data = (x_test, y_test))
 
 # save model
 model.save('resnet.h5')
