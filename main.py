@@ -40,9 +40,12 @@ datagen.fit(x_train)
 def id_block(x, tot_filters, kernel_size):
     '''residual block with identity shortcut connection'''
     x_orig = x
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', activation = 'relu', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
     x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
     x = layers.add([x, x_orig])
+    x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
 
     return x
@@ -50,10 +53,13 @@ def id_block(x, tot_filters, kernel_size):
 def proj_block(x, tot_filters, kernel_size):
     '''residual block with projection shortcut connection'''
     x_orig = x
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), strides = (2, 2), padding = 'same', activation = 'relu', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), strides = (2, 2), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
     x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
     x_orig = layers.Conv2D(tot_filters, (1, 1), strides = (2, 2), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_orig)
     x = layers.add([x, x_orig])
+    x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
 
     return x
@@ -73,7 +79,9 @@ def res_stack(x, n, tot_filters, kernel_size, proj = False):
 def resnet(input_shape, n):
     '''residual neural network'''
     x_init = layers.Input(input_shape)
-    x = layers.Conv2D(16, (3, 3), padding = 'same', activation = 'relu', kernel_regularizer = regularizers.l2(0.0001))(x_init)
+    x = layers.Conv2D(16, (3, 3), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_init)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
     x = res_stack(x, n, 16, 3)
     x = res_stack(x, n, 32, 3, proj = True)
     x = res_stack(x, n, 64, 3, proj = True)
