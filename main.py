@@ -94,7 +94,8 @@ def resnet(input_shape, n):
     return model
 
 # create session
-sess = tf.Session()
+gpu_options = tf.GPUOptions(allow_growth = True)
+sess = tf.Session(config = tf.ConfigProto(gpu_options = gpu_options))
 K.set_session(sess)
 
 # instantiate model
@@ -108,4 +109,4 @@ model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = [
 model.fit_generator(datagen.flow(x_train, y_train, batch_size = 128), epochs = args.epochs, validation_data = (x_test, y_test))
 
 # save model
-model.save('resnet.h5')
+model.save('model.h5')
