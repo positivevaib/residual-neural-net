@@ -44,8 +44,8 @@ def id_block(x, tot_filters, kernel_size):
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
-    x = layers.add([x, x_orig])
     x = layers.BatchNormalization()(x)
+    x = layers.add([x, x_orig])
     x = layers.ReLU()(x)
 
     return x
@@ -58,8 +58,8 @@ def proj_block(x, tot_filters, kernel_size):
     x = layers.ReLU()(x)
     x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
     x_orig = layers.Conv2D(tot_filters, (1, 1), strides = (2, 2), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_orig)
-    x = layers.add([x, x_orig])
     x = layers.BatchNormalization()(x)
+    x = layers.add([x, x_orig])
     x = layers.ReLU()(x)
 
     return x
