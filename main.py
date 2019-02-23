@@ -76,7 +76,7 @@ def res_stack(x, n, tot_filters, kernel_size, proj = False):
     
     return x
 
-def resnet(input_shape, n):
+def res_net(input_shape, n):
     '''residual neural network'''
     x_init = layers.Input(input_shape)
     x = layers.Conv2D(16, (3, 3), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_init)
@@ -99,7 +99,7 @@ sess = tf.Session(config = tf.ConfigProto(gpu_options = gpu_options))
 K.set_session(sess)
 
 # instantiate model
-model = resnet((32, 32, 3), args.nb_res_blocks)
+model = res_net((32, 32, 3), args.nb_res_blocks)
 model.summary()
 
 # compile model
