@@ -13,8 +13,16 @@ import tensorflow.keras.utils as utils
 
 # create argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-e', '--epochs', type = int, default = 200, help = 'total number of epochs')
-parser.add_argument('-n', '--nb_res_blocks', type = int, default = 3, help = 'number of residual blocks for each feature map size')
+parser.add_argument('-e',
+                    '--epochs',
+                    type=int,
+                    default=200,
+                    help='total number of epochs')
+parser.add_argument('-n',
+                    '--nb_res_blocks',
+                    type=int,
+                    default=3,
+                    help='number of residual blocks for each feature map size')
 
 args = parser.parse_args()
 
@@ -33,38 +41,55 @@ y_train = utils.to_categorical(y_train, 10)
 y_test = utils.to_categorical(y_test, 10)
 
 # augment data
-datagen = preprocessing.image.ImageDataGenerator(width_shift_range = 0.05, height_shift_range = 0.05, horizontal_flip = True)
+datagen = preprocessing.image.ImageDataGenerator(width_shift_range=0.05,
+                                                 height_shift_range=0.05,
+                                                 horizontal_flip=True)
 datagen.fit(x_train)
+
 
 # define model
 def id_block(x, tot_filters, kernel_size):
     '''residual block with identity shortcut connection'''
     x_orig = x
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size),
+                      padding='same',
+                      kernel_regularizer=regularizers.l2(0.0001))(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size),
+                      padding='same',
+                      kernel_regularizer=regularizers.l2(0.0001))(x)
     x = layers.BatchNormalization()(x)
     x = layers.add([x, x_orig])
     x = layers.ReLU()(x)
 
     return x
+
 
 def proj_block(x, tot_filters, kernel_size):
     '''residual block with projection shortcut connection'''
     x_orig = x
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), strides = (2, 2), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size),
+                      strides=(2, 2),
+                      padding='same',
+                      kernel_regularizer=regularizers.l2(0.0001))(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
-    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x)
-    x_orig = layers.Conv2D(tot_filters, (1, 1), strides = (2, 2), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_orig)
+    x = layers.Conv2D(tot_filters, (kernel_size, kernel_size),
+                      padding='same',
+                      kernel_regularizer=regularizers.l2(0.0001))(x)
+    x_orig = layers.Conv2D(tot_filters, (1, 1),
+                           strides=(2, 2),
+                           padding='same',
+                           kernel_regularizer=regularizers.l2(0.0001))(x_orig)
     x = layers.BatchNormalization()(x)
     x = layers.add([x, x_orig])
     x = layers.ReLU()(x)
 
     return x
 
-def res_stack(x, n, tot_filters, kernel_size, proj = False):
+
+def res_stack(x, n, tot_filters, kernel_size, proj=False):
     '''stack of residual blocks'''
     if not proj:
         for _ in range(n):
@@ -73,29 +98,33 @@ def res_stack(x, n, tot_filters, kernel_size, proj = False):
         x = proj_block(x, tot_filters, kernel_size)
         for _ in range(n - 1):
             x = id_block(x, tot_filters, kernel_size)
-    
+
     return x
+
 
 def res_net(input_shape, n):
     '''residual neural network'''
     x_init = layers.Input(input_shape)
-    x = layers.Conv2D(16, (3, 3), padding = 'same', kernel_regularizer = regularizers.l2(0.0001))(x_init)
+    x = layers.Conv2D(16, (3, 3),
+                      padding='same',
+                      kernel_regularizer=regularizers.l2(0.0001))(x_init)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = res_stack(x, n, 16, 3)
-    x = res_stack(x, n, 32, 3, proj = True)
-    x = res_stack(x, n, 64, 3, proj = True)
+    x = res_stack(x, n, 32, 3, proj=True)
+    x = res_stack(x, n, 64, 3, proj=True)
     x = layers.AveragePooling2D((2, 2))(x)
     x = layers.Flatten()(x)
-    x = layers.Dense(10, activation = 'softmax')(x)
+    x = layers.Dense(10, activation='softmax')(x)
 
-    model = models.Model(inputs = x_init, outputs = x)
+    model = models.Model(inputs=x_init, outputs=x)
 
     return model
 
+
 # create session
-gpu_options = tf.GPUOptions(allow_growth = True)
-sess = tf.Session(config = tf.ConfigProto(gpu_options = gpu_options))
+gpu_options = tf.GPUOptions(allow_growth=True)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 K.set_session(sess)
 
 # instantiate model
@@ -103,10 +132,14 @@ model = res_net((32, 32, 3), args.nb_res_blocks)
 model.summary()
 
 # compile model
-model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
 
 # train model
-model.fit_generator(datagen.flow(x_train, y_train, batch_size = 128), epochs = args.epochs, validation_data = (x_test, y_test))
+model.fit_generator(datagen.flow(x_train, y_train, batch_size=128),
+                    epochs=args.epochs,
+                    validation_data=(x_test, y_test))
 
 # save model
 model.save('model.h5')
